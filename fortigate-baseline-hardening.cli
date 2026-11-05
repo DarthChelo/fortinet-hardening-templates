@@ -1,0 +1,64 @@
+# ==================================================================
+# 🔥 FortiGate Baseline Hardening Script
+# 👤 Autor: Marcelo Bugallo (DarthChelo)
+# 🛡️ Filosofía: Deny All / Zero Trust
+# ==================================================================
+
+# 1. Configuración Global y Seguridad de Administradores
+config system global
+    set admin-sport 8443
+    set admin-ssh-port 2222
+    set admintimeout 10
+    set timezone 12
+    set strong-crypto enable
+    set disable-discovery enable
+    set usb-auto-install disable
+end
+
+# 2. Política de Contraseñas Estricta
+config system password-policy
+    set status enable
+    set apply-to admin-password ipsec-preshared-key
+    set minimum-length 14
+    set must-contain upper-case lower-case number non-alphanumeric
+    set expire-days 90
+end
+
+# 3. Bloqueo de Administrador por intentos fallidos
+config system global
+    set admin-lockout-threshold 3
+    set admin-lockout-duration 3600
+end
+
+# 4. Deshabilitar protocolos inseguros (Telnet, HTTP)
+config system interface
+    edit "wan1"
+        set allowaccess ping
+    next
+    edit "wan2"
+        set allowaccess ping
+    next
+    edit "internal"
+        # Limitar acceso solo a protocolos cifrados desde la LAN
+        set allowaccess ping https ssh
+    next
+end
+
+# 5. Restricción de acceso a la GUI/CLI por IPs confiables (Trusted Hosts)
+config system admin
+    edit "admin"
+        set trusthost1 192.168.100.0 255.255.255.0
+        # Reemplazar con la subnet de gestión real
+    next
+end
+
+# 6. Loguear todo el tráfico denegado (Implicit Deny Visibility)
+config log memory setting
+    set status enable
+end
+config log disk setting
+    set status enable
+end
+config system settings
+    set default-policy-log enable
+end
