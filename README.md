@@ -1,0 +1,1 @@
+# fortinet-hardening-templates
